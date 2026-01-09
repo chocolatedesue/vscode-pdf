@@ -5,8 +5,9 @@
   "publisher": "chocolatedesue",
   "icon": "pdf-flat.png",
   "author": {
-    "name": "AdamRaichu"
+    "name": "chocolatedesue"
   },
+  "homepage": "https://github.com/chocolatedesue/vscode-pdf",
   "license": "MIT",
   "categories": [
     "Visualization",

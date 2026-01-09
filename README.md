@@ -39,4 +39,18 @@ Simply open any `.pdf` file in VS Code. The extension will automatically activat
 
 As of version `1.1.1`, the extension exports an API that other extension authors can use to generate previews of PDFs. See `docs/API.md` on GitHub for more information.
 
+---
+
+## Fork Information
+
+This project is a major fork of [AdamRaichu/vscode-pdf-viewer](https://github.com/AdamRaichu/vscode-pdf-viewer). 
+
+### What's New in Modern PDF Pro?
+
+Unlike the original extension which uses legacy `pdf.js` canvas rendering, this fork introduces:
+- **Full Engine Swap**: Replaced `pdf.js` with high-performance `embed-pdf-viewer` (WASM).
+- **Theme Awareness**: Built-in support for VS Code's native color themes.
+- **Improved Stability**: Fixed several memory and rendering issues found in the original project.
+- **Modern UI**: A cleaner, more responsive sidebar and toolbar.
+
 [vsc-marketplace]: https://marketplace.visualstudio.com/items?itemName=chocolatedesue.modern-pdf-pro
