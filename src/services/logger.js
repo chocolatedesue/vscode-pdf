@@ -1,5 +1,5 @@
 const vscode = require("vscode");
-import { OUTPUT_CHANNEL_NAME } from "./constants.js";
+import { OUTPUT_CHANNEL_NAME } from "../constants/index.js";
 
 class Logger {
     static _channel = null;

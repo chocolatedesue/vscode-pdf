@@ -1,5 +1,5 @@
-import PDFEdit from "./editor.js";
-import PdfViewerApi from "./api.js";
+import PDFEdit from "./providers/editorProvider.js";
+import PdfViewerApi from "./api/index.js";
 
 exports.activate = function (context) {
   // Register the custom editor provider and add to subscriptions

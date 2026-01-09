@@ -3,7 +3,7 @@ const webpack = require("webpack");
 
 const extensionNodeConfig = {
   entry: {
-    extension: "./src/index.js",
+    extension: "./src/extension.js",
   },
   output: {
     filename: "[name].node.js",
@@ -22,7 +22,7 @@ const extensionNodeConfig = {
 
 const extensionWebConfig = {
   entry: {
-    extension: "./src/index.js",
+    extension: "./src/extension.js",
   },
   output: {
     filename: "[name].browser.js",
@@ -63,7 +63,7 @@ const webviewConfig = {
   module: {
     rules: [
       {
-        test: /\.svelte$/,
+        test: /\.(svelte|svelte\.js)$/,
         use: {
           loader: "svelte-loader",
           options: {

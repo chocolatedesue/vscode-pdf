@@ -1,5 +1,5 @@
-import PDFEdit from "./editor";
-import Logger from "./logger";
+import PDFEdit from "../providers/editorProvider";
+import Logger from "../services/logger";
 const vscode = require("vscode");
 
 class DataTypeEnum {
