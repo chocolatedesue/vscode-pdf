@@ -2,7 +2,7 @@ import Logger from "../services/logger";
 import { VIEW_TYPE, WEBVIEW_OPTIONS, MEDIA_FILES } from "../constants/index.js";
 import { getPdfConfiguration } from "../managers/configManager";
 import { activeEditors } from "../managers/editorManager";
-import { PDFDoc, cacheManager } from "../models/document";
+import { PDFDoc } from "../models/document";
 import { getWebviewHtml, getErrorHtml } from "./webviewHtmlBuilder";
 
 const vscode = require("vscode");
@@ -144,9 +144,6 @@ export default class PDFEdit {
           Logger.log(`[Save] Writing ${data.byteLength} bytes to ${uri.fsPath}`);
           await vscode.workspace.fs.writeFile(uri, data);
 
-          // Update cache
-          cacheManager.set(uri, data, data.byteLength);
-
           Logger.log(`[Save] File saved successfully`);
           resolve();
         } catch (e) {
@@ -189,10 +186,7 @@ export default class PDFEdit {
 
     Logger.log(`[Revert] Reverting document: ${uriString}`);
 
-    // 1. Clear cache to force reload from disk
-    cacheManager.cache.delete(uriString);
-
-    // 2. Notify webview to reload
+    // Notify webview to reload
     if (editorEntry && editorEntry.panel) {
       // Re-initialize the webview with fresh data
       // This will trigger 'ready' -> handleWebviewReady -> getFileData (fresh)
@@ -336,9 +330,6 @@ export default class PDFEdit {
             try {
               const buffer = new Uint8Array(rawData);
               await vscode.workspace.fs.writeFile(uri, buffer);
-
-              // Update cache
-              cacheManager.set(uri, buffer, buffer.byteLength);
 
               Logger.log('[Direct Save] File overwritten successfully');
             } catch (e) {

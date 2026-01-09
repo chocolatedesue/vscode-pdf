@@ -1,9 +1,5 @@
 import Logger from "../services/logger";
-import PDFCacheManager from "../services/cache.js";
 const vscode = require("vscode");
-
-// Global cache manager (shared across all PDFDoc instances)
-export const cacheManager = new PDFCacheManager(5); // Max 5 PDFs cached
 
 /**
  * @implements {import("../api/index").PdfFileDataProvider}
@@ -19,8 +15,6 @@ export class PDFDoc {
 
   dispose() {
     this._inFlightRead = null;
-    // Note: We don't clear cache here as it's managed globally by LRU policy
-    // The cache will automatically evict old entries when needed
   }
 
   get uri() {
@@ -28,16 +22,10 @@ export class PDFDoc {
   }
 
   /**
-   * Reads the file data with caching and concurrency protection.
+   * Reads the file data with concurrency protection.
    * @returns {Promise<Uint8Array>}
    */
   async getFileData() {
-    // Check global cache first
-    const cached = cacheManager.get(this.uri);
-    if (cached) {
-      return cached;
-    }
-
     // If already reading, return the existing promise
     if (this._inFlightRead) {
       return this._inFlightRead;
@@ -64,11 +52,8 @@ export class PDFDoc {
         const startTime = Date.now();
         const fileData = await vscode.workspace.fs.readFile(this.uri);
 
-        // Store in global cache as Uint8Array
-        cacheManager.set(this.uri, fileData, fileData.byteLength);
-
         const duration = Date.now() - startTime;
-        Logger.logPerformance('PDF data loaded and cached', duration, {
+        Logger.logPerformance('PDF data loaded', duration, {
           size: fileData.byteLength
         });
         return fileData;
