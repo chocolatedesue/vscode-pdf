@@ -23,6 +23,7 @@
   let error = $state<string | null>(null);
   let currentDocumentUri = null;
   let messageConfig = $state<any>(null);
+  let activeBlobUrl = null;
 
   function getTheme(): "light" | "dark" {
     if (typeof document !== "undefined") {
@@ -98,8 +99,13 @@
             console.log("[Webview] Converting base64 to blob (Fallback)");
             buffer = base64ToArrayBuffer(message.data);
           }
+          if (activeBlobUrl) {
+            console.log("[Webview] Revoking old Blob URL");
+            URL.revokeObjectURL(activeBlobUrl);
+          }
           const blob = new Blob([buffer], { type: "application/pdf" });
           src = URL.createObjectURL(blob);
+          activeBlobUrl = src;
         }
 
         if (src) {
@@ -175,6 +181,10 @@
     return () => {
       observer.disconnect();
       window.removeEventListener("message", handleMessage);
+      if (activeBlobUrl) {
+        console.log("[Webview] Cleaning up Blob URL on unmount");
+        URL.revokeObjectURL(activeBlobUrl);
+      }
     };
   });
 </script>
@@ -206,6 +216,7 @@
           src: pdfSrc,
           wasmUrl: wasmUrl,
           theme: { preference: themePreference },
+          tabBar: messageConfig?.tabBar,
           spread: {
             defaultSpreadMode: messageConfig?.spreadMode || SpreadMode.Odd,
           },

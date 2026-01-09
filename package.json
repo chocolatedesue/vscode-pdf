@@ -76,6 +76,16 @@
             "even"
           ],
           "description": "The initial spread mode when opening a PDF file."
+        },
+        "modernPdfViewer.tabBar": {
+          "type": "string",
+          "default": "never",
+          "enum": [
+            "always",
+            "multiple",
+            "never"
+          ],
+          "description": "Control the visibility of the internal tab bar."
         }
       }
     }
@@ -99,5 +109,10 @@
     "svelte-loader": "^3.2.4",
     "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "@embedpdf/core": "^2.1.2",
+    "@embedpdf/plugin-document-manager": "^2.1.2",
+    "@embedpdf/plugin-render": "^2.1.2"
   }
 }

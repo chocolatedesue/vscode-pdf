@@ -169,6 +169,10 @@ export default class PDFEdit {
       const messageDisposable = panel.webview.onDidReceiveMessage(async (message) => {
         if (message.command === 'ready') {
           await this.handleWebviewReady(dataProvider, panel, msg);
+        } else if (message.command === 'log') {
+          Logger.log(`[Webview] ${message.message}`);
+        } else if (message.command === 'error') {
+          Logger.log(`[Webview Error] ${message.error}`);
         }
       });
 

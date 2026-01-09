@@ -24,6 +24,8 @@ export function getPdfConfiguration() {
     let zoomLevel = config.get('defaultZoomLevel', 'page-width');
     const spreadMode = config.get('defaultSpreadMode', 'none');
 
+    const tabBar = config.get('tabBar', 'never');
+
     // Handle percentage strings (e.g., "100%")
     if (typeof zoomLevel === 'string' && zoomLevel.endsWith('%')) {
         const percent = parseFloat(zoomLevel);
@@ -36,6 +38,8 @@ export function getPdfConfiguration() {
 
     return {
         zoomLevel: zoomLevel,
-        spreadMode: spreadMap[spreadMode] || spreadMode
+        spreadMode: spreadMap[spreadMode] || spreadMode,
+        tabBar: tabBar,
+        initialDocuments: []
     };
 }

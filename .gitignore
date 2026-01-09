@@ -141,3 +141,4 @@ CLAUDE.md
 *.unzipped.*
 *.vsix
 .vscode-test-web/
+media/webview-bundle.js

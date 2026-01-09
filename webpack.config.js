@@ -100,6 +100,8 @@ const webviewConfig = {
   optimization: {
     minimize: true,
     splitChunks: false,
+    moduleIds: 'deterministic',
+    chunkIds: 'deterministic',
   },
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({
