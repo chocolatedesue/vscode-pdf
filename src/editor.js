@@ -95,7 +95,7 @@ export default class PDFEdit {
 
     try {
       // Load HTML template
-      const htmlPath = vscode.Uri.joinPath(extUri, "src", "webview.html");
+      const htmlPath = vscode.Uri.joinPath(mediaUri, "webview.html");
       const htmlContent = new TextDecoder("utf-8").decode(await vscode.workspace.fs.readFile(htmlPath));
 
       // Resolve resources

@@ -8,7 +8,8 @@ const TARGET_DIR = path.resolve(__dirname, '../media');
 const PRESERVED_FILES = [
     'editor.js',
     'editor.css',
-    'vscode-context.js'
+    'vscode-context.js',
+    'webview.html'
 ];
 
 function updateMedia() {
