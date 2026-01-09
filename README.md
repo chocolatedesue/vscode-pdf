@@ -60,7 +60,7 @@ Search for **"Modern PDF Preview"** in the VS Code Extensions panel.
 
 ## Credits & Disclaimer
 
-This project is a modern evolution of the [vscode-pdf-viewer](https://github.com/AdamRaichu/vscode-pdf-viewer) project.
+This project is a modern evolution of the [vscode-pdf-viewer](https://github.com/chocolatedesue/vscode-pdf) project.
 
 It leverages the **[embed-pdf-viewer](https://github.com/embedpdf/embed-pdf-viewer)** component for robust and high-performance PDF rendering via WebAssembly.
 
