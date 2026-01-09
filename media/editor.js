@@ -41,44 +41,66 @@ const observer = new MutationObserver(() => {
 observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
 if (oldState && oldState.data) {
-  previewPdf(oldState.data, oldState.wasmUri, oldState.workerUri).catch(showError);
+  previewPdf(null, oldState.data, oldState.wasmUri, oldState.workerUri).catch(showError);
 }
 
-window.addEventListener("message", (event) => {
-  if (event.data.command === "base64") {
-    previewPdf(event.data.data, event.data.wasmUri, event.data.workerUri).catch(showError);
-    vscode.setState({
-      data: event.data.data,
-      wasmUri: event.data.wasmUri,
-      workerUri: event.data.workerUri
-    });
+window.addEventListener('message', async event => {
+  const message = event.data;
+  switch (message.command) {
+    case 'preview':
+      previewPdf(message.pdfUri, message.data, message.wasmUri, message.workerUri);
+      vscode.setState({
+        pdfUri: message.pdfUri,
+        data: message.data,
+        wasmUri: message.wasmUri,
+        workerUri: message.workerUri
+      });
+      break;
+    case 'base64': // Backward compatibility
+      previewPdf(null, message.data, message.wasmUri, message.workerUri);
+      vscode.setState({
+        data: message.data,
+        wasmUri: message.wasmUri,
+        workerUri: message.workerUri
+      });
+      break;
   }
 });
 
-async function previewPdf(base64Data, wasmUri, workerUri) {
+async function previewPdf(pdfUri, base64Data, wasmUri, workerUri) {
   try {
-    const buffer = base64ToArrayBuffer(base64Data);
-    const blob = new Blob([buffer], { type: 'application/pdf' });
+    let source = pdfUri;
 
-    if (currentBlobUrl) {
-      URL.revokeObjectURL(currentBlobUrl);
+    if (!source && base64Data) {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+      }
+      const buffer = base64ToArrayBuffer(base64Data);
+      const blob = new Blob([buffer], { type: 'application/pdf' });
+      source = URL.createObjectURL(blob);
+      currentBlobUrl = source;
     }
-    currentBlobUrl = URL.createObjectURL(blob);
+
+    if (!source) {
+      console.warn("No PDF source provided.");
+      document.getElementById("loading")?.remove();
+      return;
+    }
 
     if (!viewer) {
       viewer = EmbedPDF.init({
         type: 'container',
         target: document.getElementById('pdf-viewer'),
-        src: currentBlobUrl,
+        src: source,
         wasmUrl: wasmUri,
         worker: true,
         theme: getTheme(),
       });
     } else {
-      // Update the existing viewer with the new source
+      // Update the existing viewer with the new source and other configs
       viewer.config = {
         ...viewer.config,
-        src: currentBlobUrl,
+        src: source,
         wasmUrl: wasmUri,
         theme: getTheme(),
       };

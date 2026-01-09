@@ -89,13 +89,20 @@ export default class PDFEdit {
 </body>
 
 </html>`;
-    dataProvider.getFileData().then(function (data) {
-      panel.webview.postMessage({
-        command: "base64",
-        data: data,
-        wasmUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "pdfium.wasm")).toString(true),
-        workerUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "worker-engine-BwJuk6Jt.js")).toString(true)
+    const msg = {
+      command: "preview",
+      wasmUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "pdfium.wasm")).toString(true),
+      workerUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "worker-engine-BwJuk6Jt.js")).toString(true)
+    };
+
+    if (dataProvider.uri) {
+      msg.pdfUri = panel.webview.asWebviewUri(dataProvider.uri).toString(true);
+      panel.webview.postMessage(msg);
+    } else {
+      dataProvider.getFileData().then(function (data) {
+        msg.data = data;
+        panel.webview.postMessage(msg);
       });
-    });
+    }
   }
 }
