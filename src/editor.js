@@ -10,7 +10,7 @@ class PDFDoc {
     this._uri = uri;
   }
 
-  async dispose() {}
+  async dispose() { }
 
   get uri() {
     return this._uri;
@@ -43,7 +43,7 @@ export default class PDFEdit {
 
   static viewType = "pdfViewer.PDFEdit";
 
-  constructor() {}
+  constructor() { }
 
   async resolveCustomEditor(document, panel, _token) {
     PDFEdit.previewPdfFile(document, panel);
@@ -67,8 +67,10 @@ export default class PDFEdit {
 <html>
 
 <head>
-  <script defer src="${panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "pdf.min.js"))}"></script>
-  <script defer src="${panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "editor.js"))}"></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} blob: data:; script-src ${panel.webview.cspSource}; style-src ${panel.webview.cspSource} 'unsafe-inline'; worker-src ${panel.webview.cspSource} blob:; connect-src ${panel.webview.cspSource} blob:; font-src ${panel.webview.cspSource};">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module" src="${panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "editor.js"))}"></script>
   <link rel="stylesheet" href="${panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "editor.css"))}">
 </head>
 
@@ -78,13 +80,22 @@ export default class PDFEdit {
     <h1>Your PDF is loading...</h1>
     <p>If you see this screen for more than a few seconds, close this editor tab and reopen the file.</p>
   </div>
-  <div id="canvas"></div>
+  <div id="error" style="display: none; color: var(--vscode-errorForeground); padding: 20px;">
+    <h1>Error Loading PDF</h1>
+    <pre id="error-message"></pre>
+  </div>
+  <div id="pdf-viewer" style="width: 100vw; height: 100vh;"></div>
 
 </body>
 
 </html>`;
     dataProvider.getFileData().then(function (data) {
-      panel.webview.postMessage({ command: "base64", data: data, workerUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "pdf.worker.min.js")).toString(true) });
+      panel.webview.postMessage({
+        command: "base64",
+        data: data,
+        wasmUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "pdfium.wasm")).toString(true),
+        workerUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "worker-engine-BwJuk6Jt.js")).toString(true)
+      });
     });
   }
 }

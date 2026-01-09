@@ -129,6 +129,13 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Agent and Automation
+.agent/
+.claude/
+AGENTS.md
+CLAUDE.md
 
-**package-lock.json
+# OpenSpec
+.openspec_cache/
+
 *.unzipped.*

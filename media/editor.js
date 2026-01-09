@@ -1,56 +1,101 @@
+import EmbedPDF from './embed-pdf-viewer.min.js';
+
 const vscode = acquireVsCodeApi();
 const oldState = vscode.getState();
-var workerSrc = "";
 
-if (oldState) {
-  previewPdf(oldState.base64Data);
+let viewer;
+let currentBlobUrl;
+
+function showError(err) {
+  console.error(err);
+  const errorDiv = document.getElementById("error");
+  const errorMessage = document.getElementById("error-message");
+  const loadingDiv = document.getElementById("loading");
+
+  if (loadingDiv) loadingDiv.style.display = "none";
+  if (errorDiv) {
+    errorDiv.style.display = "block";
+    errorMessage.textContent = err.stack || err.message || String(err);
+  }
+}
+
+function getTheme() {
+  if (document.body.classList.contains('vscode-dark')) {
+    return 'dark';
+  } else if (document.body.classList.contains('vscode-high-contrast')) {
+    return 'dark';
+  } else {
+    return 'light';
+  }
+}
+
+// Watch for theme changes
+const observer = new MutationObserver(() => {
+  if (viewer) {
+    viewer.config = {
+      ...viewer.config,
+      theme: getTheme()
+    };
+  }
+});
+observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+if (oldState && oldState.data) {
+  previewPdf(oldState.data, oldState.wasmUri, oldState.workerUri).catch(showError);
 }
 
 window.addEventListener("message", (event) => {
   if (event.data.command === "base64") {
-    workerSrc = event.data.workerUri;
-    previewPdf(event.data.data);
-    vscode.setState({ base64Data: event.data.data });
+    previewPdf(event.data.data, event.data.wasmUri, event.data.workerUri).catch(showError);
+    vscode.setState({
+      data: event.data.data,
+      wasmUri: event.data.wasmUri,
+      workerUri: event.data.workerUri
+    });
   }
 });
 
-function previewPdf(base64Data) {
-  document.getElementById("loading")?.remove();
+async function previewPdf(base64Data, wasmUri, workerUri) {
+  try {
+    const buffer = base64ToArrayBuffer(base64Data);
+    const blob = new Blob([buffer], { type: 'application/pdf' });
 
-  var PDFJS = window["pdfjs-dist/build/pdf"];
-
-  PDFJS.GlobalWorkerOptions.workerSrc = workerSrc;
-
-  var loadingTask = PDFJS.getDocument("data:application/pdf;base64," + base64Data);
-
-  loadingTask.promise.then(
-    function (pdf) {
-      var canvasdiv = document.getElementById("canvas");
-      var totalPages = pdf.numPages;
-
-      for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
-        pdf.getPage(pageNumber).then(function (page) {
-          var scale = 1.5;
-          var viewport = page.getViewport({ scale: scale });
-
-          var canvas = document.createElement("canvas");
-          canvasdiv.appendChild(canvas);
-
-          // Prepare canvas using PDF page dimensions
-          var context = canvas.getContext("2d");
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          // Render PDF page into canvas context
-          var renderContext = { canvasContext: context, viewport: viewport };
-
-          var renderTask = page.render(renderContext);
-        });
-      }
-    },
-    function (reason) {
-      // PDF loading error
-      console.error(reason);
+    if (currentBlobUrl) {
+      URL.revokeObjectURL(currentBlobUrl);
     }
-  );
+    currentBlobUrl = URL.createObjectURL(blob);
+
+    if (!viewer) {
+      viewer = EmbedPDF.init({
+        type: 'container',
+        target: document.getElementById('pdf-viewer'),
+        src: currentBlobUrl,
+        wasmUrl: wasmUri,
+        worker: true,
+        theme: getTheme(),
+      });
+    } else {
+      // Update the existing viewer with the new source
+      viewer.config = {
+        ...viewer.config,
+        src: currentBlobUrl,
+        wasmUrl: wasmUri,
+        theme: getTheme(),
+      };
+    }
+
+    document.getElementById("loading")?.remove();
+  } catch (e) {
+    showError(e);
+  }
+}
+
+function base64ToArrayBuffer(base64) {
+  var binary_string = window.atob(base64);
+  var len = binary_string.length;
+  var bytes = new Uint8Array(len);
+  for (var i = 0; i < len; i++) {
+    bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes.buffer;
 }
