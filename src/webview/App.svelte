@@ -76,7 +76,7 @@
     }
   });
 
-  async function handleMessage(event) {
+  async function handleMessage(event: MessageEvent) {
     const message = event.data;
     if (!message || !message.command) return;
 
@@ -103,7 +103,7 @@
         let src = message.pdfUri;
         if (!src && message.data) {
           console.log("[Webview] Processing injected data");
-          let buffer;
+          let buffer: Uint8Array;
           if (message.data instanceof Uint8Array) {
             console.log("[Webview] Data is already Uint8Array (Zero-copy)");
             buffer = message.data;
@@ -112,13 +112,14 @@
             buffer = new Uint8Array(message.data);
           } else {
             console.log("[Webview] Converting base64 to blob (Fallback)");
-            buffer = base64ToArrayBuffer(message.data);
+            buffer = new Uint8Array(base64ToArrayBuffer(message.data));
           }
           if (activeBlobUrl) {
             console.log("[Webview] Revoking old Blob URL");
             URL.revokeObjectURL(activeBlobUrl);
+            activeBlobUrl = null;
           }
-          const blob = new Blob([buffer], { type: "application/pdf" });
+          const blob = new Blob([buffer.buffer as ArrayBuffer], { type: "application/pdf" });
           src = URL.createObjectURL(blob);
           activeBlobUrl = src;
         }
@@ -161,7 +162,7 @@
                 // Send as standard Array to avoid JSON serialization issues with TypedArrays
                 vscode.postMessage({
                   command: "save-response",
-                  data: Array.from(new Uint8Array(arrayBuffer)),
+                  data: new Uint8Array(arrayBuffer),
                   requestId: message.requestId,
                 });
               }
@@ -197,7 +198,7 @@
     }
   }
 
-  function base64ToArrayBuffer(base64) {
+  function base64ToArrayBuffer(base64: string): ArrayBuffer {
     const binary_string = window.atob(base64);
     const len = binary_string.length;
     const bytes = new Uint8Array(len);
@@ -232,7 +233,7 @@
       const oldState = vscode.getState();
       if (oldState && (oldState.pdfUri || oldState.data)) {
         console.log("[Webview] Restoring state");
-        handleMessage({ data: { command: "preview", ...oldState } });
+        handleMessage({ data: { command: "preview", ...oldState } } as MessageEvent);
       }
     }
 

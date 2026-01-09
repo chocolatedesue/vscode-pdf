@@ -33,8 +33,9 @@ Review and mark up documents directly.
 
 ### 🌐 Universal Support
 Works everywhere you use VS Code.
-- **Desktop**: Windows, macOS, Linux.
-- **Web**: VS Code for Web (vscode.dev), GitHub Codespaces.
+- **Desktop**: Full features supported on Windows, macOS, and Linux.
+- **Web**: Supports VS Code for Web (vscode.dev) and GitHub Codespaces.
+    - **Note**: The Web version is optimized for **viewing only**. Other features (like annotation saving) are not guaranteed to work in the browser environment.
 - **Privacy-First**: All rendering happens locally. Your data never leaves your machine (or browser sandbox).
 
 ### ⚙️ Configuration

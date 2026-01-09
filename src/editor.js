@@ -1,4 +1,3 @@
-import PdfViewerApi from "./api";
 import Logger from "./logger";
 import PDFCacheManager from "./cache.js";
 import { VIEW_TYPE, WEBVIEW_OPTIONS, MEDIA_FILES } from "./constants.js";
@@ -24,9 +23,11 @@ class PDFDoc {
    */
   constructor(uri) {
     this._uri = uri;
+    this._inFlightRead = null;
   }
 
   dispose() {
+    this._inFlightRead = null;
     // Note: We don't clear cache here as it's managed globally by LRU policy
     // The cache will automatically evict old entries when needed
   }
@@ -36,7 +37,7 @@ class PDFDoc {
   }
 
   /**
-   * Reads the file data with caching.
+   * Reads the file data with caching and concurrency protection.
    * @returns {Promise<Uint8Array>}
    */
   async getFileData() {
@@ -46,37 +47,46 @@ class PDFDoc {
       return cached;
     }
 
-    // Check file size limit for Web environment (100MB)
-    if (vscode.env.uiKind === vscode.UIKind.Web) {
+    // If already reading, return the existing promise
+    if (this._inFlightRead) {
+      return this._inFlightRead;
+    }
+
+    this._inFlightRead = (async () => {
       try {
-        const stat = await vscode.workspace.fs.stat(this.uri);
-        const MAX_SIZE_MB = 100;
-        if (stat.size > MAX_SIZE_MB * 1024 * 1024) {
-          throw new Error(`File is too large (${(stat.size / 1024 / 1024).toFixed(1)}MB) for the Web version (Max ${MAX_SIZE_MB}MB). Please use VS Code Desktop.`);
+        // Check file size limit for Web environment (100MB)
+        if (vscode.env.uiKind === vscode.UIKind.Web) {
+          try {
+            const stat = await vscode.workspace.fs.stat(this.uri);
+            const MAX_SIZE_MB = 100;
+            if (stat.size > MAX_SIZE_MB * 1024 * 1024) {
+              throw new Error(`File is too large (${(stat.size / 1024 / 1024).toFixed(1)}MB) for the Web version (Max ${MAX_SIZE_MB}MB). Please use VS Code Desktop.`);
+            }
+          } catch (e) {
+            // Ignore stat errors, fallback to try reading
+            if (e.message && e.message.includes('File is too large')) {
+              throw e;
+            }
+          }
         }
-      } catch (e) {
-        // Ignore stat errors, fallback to try reading
-        if (e.message && e.message.includes('File is too large')) {
-          throw e;
-        }
+
+        const startTime = Date.now();
+        const fileData = await vscode.workspace.fs.readFile(this.uri);
+
+        // Store in global cache as Uint8Array
+        cacheManager.set(this.uri, fileData, fileData.byteLength);
+
+        const duration = Date.now() - startTime;
+        Logger.logPerformance('PDF data loaded and cached', duration, {
+          size: fileData.byteLength
+        });
+        return fileData;
+      } finally {
+        this._inFlightRead = null;
       }
-    }
+    })();
 
-    try {
-      const startTime = Date.now();
-      const fileData = await vscode.workspace.fs.readFile(this.uri);
-
-      // Store in global cache as Uint8Array
-      cacheManager.set(this.uri, fileData, fileData.byteLength);
-
-      const duration = Date.now() - startTime;
-      Logger.logPerformance('PDF data loaded and cached', duration, {
-        size: fileData.byteLength
-      });
-      return fileData;
-    } catch (err) {
-      throw err;
-    }
+    return this._inFlightRead;
   }
 }
 
@@ -90,6 +100,7 @@ export default class PDFEdit {
    * @returns {vscode.Disposable}
    */
   static register(context) {
+    PDFEdit.globalContext = context;
     const provider = new PDFEdit(context);
     return vscode.window.registerCustomEditorProvider(PDFEdit.viewType, provider, {
       webviewOptions: {
@@ -129,7 +140,7 @@ export default class PDFEdit {
     const provider = new PDFEdit(context); // Instance just for calling methods, though methods could be static or associated with entry
 
     try {
-      await provider._saveDocument(activeEntry.uri, activeEntry.panel, tokenSource.token);
+      await provider.#performSave(activeEntry.uri, activeEntry.panel, tokenSource.token);
       vscode.window.showInformationMessage("PDF Saved Successfully");
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to save PDF: ${e.message}`);
@@ -139,7 +150,24 @@ export default class PDFEdit {
   }
 
   static viewType = VIEW_TYPE;
+  static globalContext = null;
 
+  /**
+   * Preview a PDF file from an API provider.
+   * @param {import("./api").PdfFileDataProvider} provider
+   * @param {vscode.WebviewPanel} panel
+   */
+  static async previewPdfFile(provider, panel) {
+    panel.webview.options = WEBVIEW_OPTIONS;
+
+    const editor = new PDFEdit(PDFEdit.globalContext);
+    if (!PDFEdit.globalContext) {
+      Logger.log('[Error] Extension context not initialized. Call register() first.');
+      return;
+    }
+
+    await editor.setupWebview(provider, panel);
+  }
 
   /**
    * @param {vscode.ExtensionContext} context
@@ -165,60 +193,22 @@ export default class PDFEdit {
       return;
     }
 
-    Logger.log(`[Save] Initiating save for ${uriString}`);
-
-    // Create a promise that resolves when the webview returns the data
-    return new Promise((resolve, reject) => {
-      // Set the resolver to be called when 'save-response' is received
-      editorEntry.resolveSave = async (data) => {
-        try {
-          if (!data) {
-            Logger.log(`[Save] No data received from webview`);
-            resolve();
-            return;
-          }
-
-          Logger.log(`[Save] Writing ${data.byteLength} bytes to ${document.uri.fsPath}`);
-          await vscode.workspace.fs.writeFile(document.uri, data);
-          Logger.log(`[Save] File saved successfully`);
-          resolve();
-        } catch (e) {
-          Logger.log(`[Save] Error writing file: ${e}`);
-          reject(e);
-        } finally {
-          editorEntry.resolveSave = null;
-        }
-      };
-
-      // Send save command
-      editorEntry.panel.webview.postMessage({ command: 'save' });
-
-      // Handle cancellation/timeout
-      const timeout = setTimeout(() => {
-        if (editorEntry.resolveSave) {
-          Logger.log(`[Save] Timeout waiting for webview response`);
-          editorEntry.resolveSave = null;
-          reject(new Error("Save timed out"));
-        }
-      }, 10000); // 10s timeout
-
-      cancellation.onCancellationRequested(() => {
-        clearTimeout(timeout);
-        editorEntry.resolveSave = null;
-        reject(new Error("Save cancelled"));
-      });
-    });
+    return this.#performSave(document.uri, editorEntry.panel, cancellation);
   }
 
   /**
    * Internal helper to save document
-   * @param {vscode.Uri} uri 
-   * @param {vscode.WebviewPanel} panel 
-   * @param {vscode.CancellationToken} cancellation 
+   * @param {vscode.Uri} uri
+   * @param {vscode.WebviewPanel} panel
+   * @param {vscode.CancellationToken} cancellation
    */
-  async _saveDocument(uri, panel, cancellation) {
+  async #performSave(uri, panel, cancellation) {
     const uriString = uri.toString();
     const editorEntry = activeEditors.get(uriString);
+
+    if (!editorEntry) {
+      throw new Error(`No active editor entry for ${uriString}`);
+    }
 
     Logger.log(`[Save] Initiating save for ${uriString}`);
 
@@ -237,9 +227,7 @@ export default class PDFEdit {
           await vscode.workspace.fs.writeFile(uri, data);
 
           // Update cache
-          if (cacheManager) {
-            cacheManager.set(uri, data, data.byteLength);
-          }
+          cacheManager.set(uri, data, data.byteLength);
 
           Logger.log(`[Save] File saved successfully`);
           resolve();
@@ -261,7 +249,7 @@ export default class PDFEdit {
           editorEntry.resolveSave = null;
           reject(new Error("Save timed out"));
         }
-      }, 10000); // 10s timeout
+      }, 30000); // 30s timeout
 
       cancellation.onCancellationRequested(() => {
         clearTimeout(timeout);
@@ -274,28 +262,34 @@ export default class PDFEdit {
   /**
    * Revert the custom document.
    * @param {vscode.CustomDocument} document
-   * @param {vscode.CancellationToken} cancellation
+   * @param {vscode.CancellationToken} _cancellation
    * @returns {Promise<void>}
    */
-  async revertCustomDocument(document, cancellation) {
-    // Reload logic would go here
-    // For now, we might just reload the webview content
+  async revertCustomDocument(document, _cancellation) {
     const uriString = document.uri.toString();
     const editorEntry = activeEditors.get(uriString);
-    if (editorEntry) {
-      // Send reload command or re-init?
-      // For this task, we focus on save. Revert is required by interface.
-      return;
+
+    Logger.log(`[Revert] Reverting document: ${uriString}`);
+
+    // 1. Clear cache to force reload from disk
+    cacheManager.cache.delete(uriString);
+
+    // 2. Notify webview to reload
+    if (editorEntry && editorEntry.panel) {
+      // Re-initialize the webview with fresh data
+      // This will trigger 'ready' -> handleWebviewReady -> getFileData (fresh)
+      await this.setupWebview(document, editorEntry.panel);
     }
   }
 
   /**
    * Backup the custom document.
    * @param {vscode.CustomDocument} document
-   * @param {vscode.CancellationToken} cancellation
+   * @param {vscode.CustomDocumentBackupContext} _context
+   * @param {vscode.CancellationToken} _cancellation
    * @returns {Promise<vscode.CustomDocumentBackup>}
    */
-  async backupCustomDocument(document, context, cancellation) {
+  async backupCustomDocument(document, _context, _cancellation) {
     // Implementation for hot exit / backup
     return {
       id: document.uri.toString(),
@@ -404,7 +398,7 @@ export default class PDFEdit {
           // Mark document as dirty
           Logger.log(`[Webview] Document marked dirty`);
           this._onDidChangeCustomDocument.fire({
-            document,
+            document: dataProvider,
             undo: () => { }, // We don't support undo/redo yet
             redo: () => { }
           });
@@ -412,15 +406,22 @@ export default class PDFEdit {
           // Unsolicited save from webview (e.g. Ctrl+S)
           const rawData = message.data;
           if (rawData) {
-            Logger.log(`[Direct Save] Writing ${rawData.length} bytes to ${document.uri.fsPath}`);
+            Logger.log(`[Direct Save] Writing ${rawData.length} bytes to ${dataProvider.uri.fsPath}`);
             // Write file directly
             try {
               const buffer = new Uint8Array(rawData);
-              await vscode.workspace.fs.writeFile(document.uri, buffer);
+              await vscode.workspace.fs.writeFile(dataProvider.uri, buffer);
 
               // Update cache
-              if (cacheManager) {
-                cacheManager.set(document.uri, buffer, buffer.byteLength);
+              cacheManager.set(dataProvider.uri, buffer, buffer.byteLength);
+
+              // Clear dirty state if it's a CustomDocument
+              if (typeof dataProvider.uri === 'object') {
+                // In VS Code Custom Editor API, we need to signal that the document is saved
+                // to clear the dirty bit in the UI.
+                // Since this is a "direct save", we should ideally use the workspace save API,
+                // but if we write directly, we can't easily clear the bit without a standard save call.
+                // However, we can fire an event or let the user know.
               }
 
               Logger.log('[Direct Save] File overwritten successfully');

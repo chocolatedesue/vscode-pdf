@@ -20,7 +20,11 @@ class PDFCacheManager {
         const key = uri.toString();
         const entry = this.cache.get(key);
         if (entry) {
+            // Move to end of Map to maintain LRU order (most recently used)
+            this.cache.delete(key);
             entry.lastAccess = Date.now();
+            this.cache.set(key, entry);
+
             Logger.log(`Cache hit for ${uri.fsPath}`);
             return entry.data;
         }
@@ -37,12 +41,13 @@ class PDFCacheManager {
     set(uri, data, size) {
         const key = uri.toString();
 
-        // If cache is full, evict least recently used entry
-        if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-            const entries = Array.from(this.cache.entries());
-            const oldest = entries.sort((a, b) => a[1].lastAccess - b[1].lastAccess)[0];
-            this.cache.delete(oldest[0]);
-            Logger.log(`Cache evicted: ${oldest[0]} (LRU policy)`);
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
+        } else if (this.cache.size >= this.maxSize) {
+            // Map.keys().next().value gets the first (oldest) key in O(1)
+            const oldestKey = this.cache.keys().next().value;
+            this.cache.delete(oldestKey);
+            Logger.log(`Cache evicted: ${oldestKey} (LRU policy)`);
         }
 
         this.cache.set(key, {

@@ -39,55 +39,12 @@ class PdfFileDataProvider {
   }
 
 
-  getFileData() {
-    var _data = this.data;
-    var _type = this.type;
-    return new Promise(function (resolve, reject) {
-      if (typeof _data === "undefined") {
-        reject(new TypeError("Cannot get file data because data is undefined."));
-      }
-      switch (_type) {
-        case DataTypeEnum.BASE64STRING:
-          resolve(_data);
-          break;
-        case DataTypeEnum.UINT8ARRAY:
-          try {
-            // Optimized Base64 conversion with chunked processing
-            let base64;
-            if (typeof globalThis !== 'undefined' && typeof globalThis.btoa === 'function') {
-              // Chunked processing to avoid large string concatenation
-              const CHUNK_SIZE = 0x8000; // 32KB chunks
-              let binary = '';
-              for (let i = 0; i < _data.byteLength; i += CHUNK_SIZE) {
-                const chunk = _data.subarray(i, Math.min(i + CHUNK_SIZE, _data.byteLength));
-                binary += String.fromCharCode.apply(null, chunk);
-              }
-              base64 = globalThis.btoa(binary);
-            } else if (typeof Window !== 'undefined' && typeof Window.prototype.btoa === 'function') {
-              // Fallback for some older browser envs if globalThis is missing
-              const CHUNK_SIZE = 0x8000;
-              let binary = '';
-              for (let i = 0; i < _data.byteLength; i += CHUNK_SIZE) {
-                const chunk = _data.subarray(i, Math.min(i + CHUNK_SIZE, _data.byteLength));
-                binary += String.fromCharCode.apply(null, chunk);
-              }
-              base64 = window.btoa(binary);
-            } else if (typeof Buffer !== 'undefined') {
-              base64 = Buffer.from(_data).toString('base64');
-            } else {
-              throw new Error("Environment does not support Base64 conversion (no btoa or Buffer)");
-            }
-            resolve(base64);
-          } catch (err) {
-            reject(err);
-          }
-          break;
-
-        default:
-          reject(new TypeError("Unknown data type " + _type));
-          break;
-      }
-    });
+  /**
+   * Get file data as Uint8Array.
+   * @returns {Promise<Uint8Array>}
+   */
+  async getFileData() {
+    return this.getRawData();
   }
 
   /**
@@ -96,11 +53,15 @@ class PdfFileDataProvider {
    */
   getRawData() {
     if (this.type === DataTypeEnum.UINT8ARRAY) {
-      return this.data;
+      if (this.data instanceof Uint8Array) {
+        return this.data;
+      }
+      return new Uint8Array(this.data as any);
     }
     if (this.type === DataTypeEnum.BASE64STRING) {
-      const binary_string = Buffer.from(this.data, 'base64');
-      return new Uint8Array(binary_string);
+      // Node.js env in VS Code provides Buffer
+      const buffer = Buffer.from(this.data as string, 'base64');
+      return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     }
     throw new TypeError("Unknown data type " + this.type);
   }
@@ -117,7 +78,15 @@ export default class PdfViewerApi {
    */
   static previewPdfFile(provider) {
     Logger.log(`API: Creating preview for: ${provider.name}`);
-    const panel = vscode.window.createWebviewPanel("modernPdfViewer.apiCreatedPreview", provider.name);
+    const panel = vscode.window.createWebviewPanel(
+      "modernPdfViewer.apiCreatedPreview",
+      provider.name,
+      vscode.ViewColumn.Active,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true
+      }
+    );
     PDFEdit.previewPdfFile(provider, panel);
   }
 }
