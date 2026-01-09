@@ -16,7 +16,7 @@
   "repository": {
     "url": "https://github.com/chocolatedesue/vscode-pdf"
   },
-  "version": "1.4.1",
+  "version": "1.4.2",
   "browser": "./dist/extension.browser.js",
   "main": "./dist/extension.node.js",
   "extensionKind": [
@@ -44,7 +44,41 @@
         ],
         "priority": "default"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Modern PDF Preview",
+      "properties": {
+        "modernPdfViewer.defaultZoomLevel": {
+          "type": "string",
+          "default": "page-width",
+          "enum": [
+            "page-width",
+            "page-fit",
+            "page-height",
+            "auto",
+            "50%",
+            "75%",
+            "100%",
+            "125%",
+            "150%",
+            "200%",
+            "300%",
+            "400%"
+          ],
+          "description": "The initial zoom level when opening a PDF file."
+        },
+        "modernPdfViewer.defaultSpreadMode": {
+          "type": "string",
+          "default": "none",
+          "enum": [
+            "none",
+            "odd",
+            "even"
+          ],
+          "description": "The initial spread mode when opening a PDF file."
+        }
+      }
+    }
   },
   "scripts": {
     "build": "webpack",

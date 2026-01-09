@@ -10,7 +10,9 @@
 
   /* global acquireVsCodeApi */
   const vscode =
-    typeof acquireVsCodeApi !== "undefined" ? acquireVsCodeApi() : null;
+    typeof (window as any).acquireVsCodeApi !== "undefined"
+      ? (window as any).acquireVsCodeApi()
+      : null;
 
   let themePreference = $state<"light" | "dark">(getTheme());
   let pdfSrc = $state<string | null>(null);
@@ -20,6 +22,7 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
   let currentDocumentUri = null;
+  let messageConfig = $state<any>(null);
 
   function getTheme(): "light" | "dark" {
     if (typeof document !== "undefined") {
@@ -74,6 +77,7 @@
         console.log("[Webview] Processing preview for:", newDocUri);
         currentDocumentUri = newDocUri;
         wasmUrl = message.wasmUri;
+        messageConfig = message.config;
 
         // Use Blob URL for data injection mode
         let src = message.pdfUri;
@@ -101,6 +105,7 @@
             wasmUri: message.wasmUri,
             workerUri: message.workerUri,
             viewState: vscode.getState()?.viewState || null,
+            config: message.config,
           });
         }
         break;
@@ -188,10 +193,10 @@
           wasmUrl: wasmUrl,
           theme: { preference: themePreference },
           spread: {
-            defaultSpreadMode: SpreadMode.Odd,
+            defaultSpreadMode: messageConfig?.spreadMode || SpreadMode.Odd,
           },
           zoom: {
-            defaultZoomLevel: ZoomMode.FitWidth,
+            defaultZoomLevel: messageConfig?.zoomLevel || ZoomMode.FitWidth,
           },
         }}
         style="width: 100%; height: 100%;"

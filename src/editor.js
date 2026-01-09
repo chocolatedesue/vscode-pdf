@@ -2,6 +2,7 @@ import PdfViewerApi from "./api";
 import Logger from "./logger";
 import PDFCacheManager from "./cache.js";
 import { VIEW_TYPE, WEBVIEW_OPTIONS, MEDIA_FILES } from "./constants.js";
+import { getPdfConfiguration } from "./config";
 const vscode = require("vscode");
 
 // Global cache manager (shared across all PDFDoc instances)
@@ -159,9 +160,11 @@ export default class PDFEdit {
         .replace(/{{WASM_URI}}/g, wasmUri.toString());
 
       // Prepare init message
+      const config = getPdfConfiguration();
       const msg = {
         command: "preview",
-        wasmUri: wasmUri.toString(true)
+        wasmUri: wasmUri.toString(true),
+        config: config
       };
 
       // Message Handling - Store the disposable for cleanup

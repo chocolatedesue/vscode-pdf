@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-01-09
+
+### Added
+- **Configurable Settings**: Users can now set default zoom level and spread mode via VS Code settings (`modernPdfViewer.defaultZoomLevel` and `modernPdfViewer.defaultSpreadMode`).
+
+### Documentation
+- **Consolidation**: Simplified documentation by merging operational guides into `DEVELOPMENT.md` and removing redundant files.
+- **Cleanup**: Improved `README.md` with clear configuration instructions and project credits.
+
 ## [1.4.0] - 2026-01-09
 
 ### Performance

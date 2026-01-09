@@ -36,6 +36,13 @@ Works everywhere you use VS Code.
 - **Web**: VS Code for Web (vscode.dev), GitHub Codespaces.
 - **Privacy-First**: All rendering happens locally. Your data never leaves your machine (or browser sandbox).
 
+### ⚙️ Configuration
+
+Customize the initial viewer state in your VS Code settings:
+
+- `modernPdfViewer.defaultZoomLevel`: Initial zoom (e.g., `page-width`, `page-fit`, `100%`).
+- `modernPdfViewer.defaultSpreadMode`: Initial spread (e.g., `none`, `odd`, `even`).
+
 ### 🎨 Seamless Integration
 - **Theme Sync**: Automatically adapts to Light, Dark, and High Contrast themes.
 - **Rich Toolbar**: Thumbnails, Outline/Bookmarks, Search, Print, and Presentation Mode.
@@ -43,30 +50,22 @@ Works everywhere you use VS Code.
 ## 📦 Installation & Search
 
 ### 🔍 Search
-Search for **"Modern PDF Preview"** in the VS Code Extensions panel.
-
-### 🆔 Extension ID
-`chocolatedesue.modern-pdf-preview`
-
-### 🌐 Direct Links
-- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=chocolatedesue.modern-pdf-preview)
-- [Open VSX Registry](https://open-vsx.org/extension/chocolatedesue/modern-pdf-preview)
+Search for **"Modern PDF Preview"** in the VS Code Extensions panel or use the ID: `chocolatedesue.modern-pdf-preview`.
 
 ## 📚 Documentation
 
-- **[Technical Architecture](docs/ARCHITECTURE.md)**: Learn how we use WASM and Web Workers.
-- **[API Reference](docs/API.md)**: Integrate PDF previewing into your own extension.
+- **[Technical Architecture](docs/ARCHITECTURE.md)**: How WASM and Web Workers are used.
+- **[Development Guide](docs/DEVELOPMENT.md)**: Setup, build, testing, and release procedures.
+- **[API Reference](docs/API.md)**: Preview PDFs from your own extension.
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)**: Solutions for common issues.
 
-## Credits & Disclaimer
+## 📜 Credits & License
 
-This project is a modern evolution of the [vscode-pdf-viewer](https://github.com/AdamRaichu/vscode-pdf-viewer) project.
+This project is an evolution of [vscode-pdf-viewer](https://github.com/AdamRaichu/vscode-pdf-viewer) and uses:
+- **[embed-pdf-viewer](https://github.com/embedpdf/embed-pdf-viewer)**: Core UI component.
+- **[PDFium WASM](https://github.com/bblanchon/pdfium-binaries)**: High-performance rendering engine (Apache 2.0 / BSD 3-Clause).
 
-It leverages the **[embed-pdf-viewer](https://github.com/embedpdf/embed-pdf-viewer)** component for robust and high-performance PDF rendering via WebAssembly.
-
-> **Note**: I am **NOT** the maintainer of `pdfium` or `embed-pdf-viewer`. This extension is a wrapper that integrates these excellent technologies into VS Code. 
->
-> If you encounter rendering bugs or specific PDF feature issues, please check the upstream repositories. I cannot fix core rendering engine bugs.
+License: **MIT**
 
 [vsc-marketplace]: https://marketplace.visualstudio.com/items?itemName=chocolatedesue.modern-pdf-preview
 
