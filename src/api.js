@@ -38,6 +38,7 @@ class PdfFileDataProvider {
     return this;
   }
 
+
   getFileData() {
     var _data = this.data;
     var _type = this.type;
@@ -51,21 +52,24 @@ class PdfFileDataProvider {
           break;
         case DataTypeEnum.UINT8ARRAY:
           try {
-            // Web-compatible way to convert Uint8Array to base64
+            // Optimized Base64 conversion with chunked processing
             let base64;
             if (typeof globalThis !== 'undefined' && typeof globalThis.btoa === 'function') {
+              // Chunked processing to avoid large string concatenation
+              const CHUNK_SIZE = 0x8000; // 32KB chunks
               let binary = '';
-              const len = _data.byteLength;
-              for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(_data[i]);
+              for (let i = 0; i < _data.byteLength; i += CHUNK_SIZE) {
+                const chunk = _data.subarray(i, Math.min(i + CHUNK_SIZE, _data.byteLength));
+                binary += String.fromCharCode.apply(null, chunk);
               }
               base64 = globalThis.btoa(binary);
             } else if (typeof Window !== 'undefined' && typeof Window.prototype.btoa === 'function') {
               // Fallback for some older browser envs if globalThis is missing
+              const CHUNK_SIZE = 0x8000;
               let binary = '';
-              const len = _data.byteLength;
-              for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(_data[i]);
+              for (let i = 0; i < _data.byteLength; i += CHUNK_SIZE) {
+                const chunk = _data.subarray(i, Math.min(i + CHUNK_SIZE, _data.byteLength));
+                binary += String.fromCharCode.apply(null, chunk);
               }
               base64 = window.btoa(binary);
             } else if (typeof Buffer !== 'undefined') {
@@ -76,7 +80,6 @@ class PdfFileDataProvider {
             resolve(base64);
           } catch (err) {
             reject(err);
-            console.error("HINT from PDF Viewer API: Error converting Uint8Array to Base64 in this environment: " + err.message);
           }
           break;
 
@@ -86,6 +89,7 @@ class PdfFileDataProvider {
       }
     });
   }
+
 }
 
 

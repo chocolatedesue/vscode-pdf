@@ -13,6 +13,7 @@ module.exports = {
     vscode: "commonjs vscode",
   },
   mode: "production",
+  target: "node",
   optimization: {
     minimize: true,
   },
