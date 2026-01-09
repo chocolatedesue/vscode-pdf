@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
  
+## [1.5.0] - 2026-01-09
+
+### Refactored
+- **Editor Architecture**: Improved internal architecture for better state management and reliability.
+- **Memory Management**: Fixed potential memory leaks by centralizing message listener disposal.
+- **Data Integrity**: Optimized data handling for shared buffers to prevent corruption.
+
+## [1.4.9] - 2026-01-09
+
+### Fixed
+- **Maintenance**: Minor bug fixes and performance improvements.
+
 ## [1.4.7]
 - **Feature**: Native `Ctrl+S` / `Cmd+S` support to directly save modifications to the original PDF file.
 - **Fix**: Resolved issue where `Ctrl+W` was captured by the webview; it now correctly closes the editor tab.
