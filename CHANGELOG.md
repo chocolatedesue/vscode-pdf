@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-01-09
+
+### Performance
+- **Direct URI Loading**: Implemented direct file streaming for Desktop, enabling instant opening of large PDF files (GB+) with zero memory copy overhead.
+- **WASM Preloading**: Added critical resource preloading to parallelize engine download and compilation, significantly reducing time-to-first-render.
+- **Lazy Activation**: Removed explicit activation events to improve VS Code startup performance.
+- **Lifecycle Optimization**: Implemented visibility-aware state polling (auto-pause in background) to eliminate CPU usage for hidden tabs.
+- **LRU Cache**: Increased cache capacity to 5 documents.
+
+### Fixed
+- **Tab Reload**: Fixed issue where Webview would reload when switching tabs (properly enabled `retainContextWhenHidden`).
+- **Web Compatibility**: Fixed `path` module errors in Web Worker environments (vscode.dev).
+- **API Compliance**: Corrected usage of EmbedPDF Zoom/Scroll Plugin APIs.
+
 ## [1.3.2] - 2026-01-09
 
 ### Fixed
