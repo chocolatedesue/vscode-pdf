@@ -7,7 +7,7 @@
 [![Visual Studio Marketplace Last Updated](https://img.shields.io/visual-studio-marketplace/last-updated/chocolatedesue.modern-pdf-pro?color=darkblue&logo=visual%20studio%20code&logoColor=007acc)][vsc-marketplace]
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/chocolatedesue.modern-pdf-pro?color=darkblue&logo=visual%20studio%20code&logoColor=007acc)][vsc-marketplace]
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/chocolatedesue.modern-pdf-pro?color=darkblue&label=Install%20Count&logo=visual%20studio%20code&logoColor=007acc)][vsc-marketplace]
-[![Patreon](https://img.shields.io/badge/Support-Patreon-FF424D?logo=patreon)][patreon-link]
+
 
 [![GitHub issues](https://img.shields.io/github/issues/chocolatedesue/vscode-pdf)](https://github.com/chocolatedesue/vscode-pdf/issues)
 [![GitHub stars](https://img.shields.io/github/stars/chocolatedesue/vscode-pdf)](https://github.com/chocolatedesue/vscode-pdf/stargazers)
@@ -66,4 +66,4 @@ Refer to [`docs/API.md`](docs/API.md) for full documentation.
 This project is a modern evolution of the [vscode-pdf-viewer](https://github.com/AdamRaichu/vscode-pdf-viewer) project.
 
 [vsc-marketplace]: https://marketplace.visualstudio.com/items?itemName=chocolatedesue.modern-pdf-pro
-[patreon-link]: https://www.patreon.com/bePatron?u=23456789 (Replace with real link if available)
+
