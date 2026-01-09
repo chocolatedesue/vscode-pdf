@@ -5,6 +5,9 @@ if [ -f .env ]; then
   export $(cat .env | xargs)
 fi
 
+# Ensure fresh build before publishing
+npm run build
+
 # VS Code Marketplace
 if [ -z "$VSCE_PAT" ]; then
   echo "Error: VSCE_PAT is not set in .env file."
