@@ -49,6 +49,13 @@ Customize the initial viewer state in your VS Code settings:
 - **Theme Sync**: Automatically adapts to Light, Dark, and High Contrast themes.
 - **Rich Toolbar**: Thumbnails, Outline/Bookmarks, Search, Print, and Presentation Mode.
 
+## ⚠️ Resource Management Notice
+
+- **Multiple Webviews**: Each PDF document opens in its own independent Webview container.
+- **No Automatic Recycling**: The extension **does not** implement an automatic LRU (Least Recently Used) recycling mechanism for open documents.
+- **Memory Usage**: To ensure high performance and context retention (`retainContextWhenHidden: true`), Webviews are kept in memory even when hidden.
+- **Recommendation**: Please manually close PDF tabs you are no longer using to free up system resources, especially when dealing with very large files.
+
 ## 📦 Installation & Search
 
 ### 🔍 Search

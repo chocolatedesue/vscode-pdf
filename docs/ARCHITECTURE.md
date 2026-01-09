@@ -4,27 +4,36 @@ This document describes the technical design of the **Modern PDF Preview** exten
 
 ## Overview
 
-This extension differentiates itself from legacy viewers by using a modern stack designed for performance and security.
+The extension uses a multi-layered modular architecture to ensure separation of concerns, high performance, and platform-agnostic support (Desktop & Web).
 
 ### 1. Rendering Engine
-We use `pdfium.wasm` (via `embed-pdf-viewer`), a compiled WebAssembly version of the industry-standard **PDFium** library. 
-- **Consistency**: Ensures rendering matches Google Chrome's native PDF viewer.
-- **Performance**: High-speed rendering with low memory overhead compared to pure JS solutions.
+We use `pdfium.wasm` (via `@embedpdf/svelte-pdf-viewer`), a compiled WebAssembly version of the industry-standard **PDFium** library.
+- **Consistency**: Matches Google Chrome's native PDF rendering.
+- **WASM Performance**: High-speed rendering with predictable performance.
 
-### 2. Web Workers
-Rendering tasks are offloaded to a Web Worker (`worker-engine.js`).
-- **Responsiveness**: Keeps the VS Code UI thread responsive, even when rendering large or complex documents.
-- **Isolation**: Crashes in the rendering engine are less likely to bring down the extension host.
+### 2. Extension Host (Backend) Structure
+The backend is split into semantic layers:
+- **`providers/`**: Implements VS Code `CustomEditorProvider`. Handles the bridge between VS Code and the Webview.
+- **`models/`**: `PDFDoc` class handles raw file data loading and concurrency protection.
+- **`managers/`**:
+    - `ConfigManager`: Manages VS Code settings.
+    - `EditorManager`: Tracks active editor instances and their state.
+- **`services/`**: Cross-cutting services like `Logger`.
+- **`api/`**: Public API for other extensions to trigger PDF previews.
 
-### 3. Hybrid Loading Strategy
-To support both Desktop and Web environments, we implement a hybrid loading mechanism:
+### 3. Webview (Frontend) Structure
+Built with **Svelte 5** and **Runes** for modern, high-performance state management:
+- **`state/`**: Centralized reactive state (`pdfStore.svelte.js`). Logic is separated from UI components.
+- **`components/`**: Modular Svelte components (`PdfViewer`, `Loading`, `ErrorMessage`).
+- **`services/`**: Standardized communication with the Extension Host via `vscodeService.js`.
+- **`hooks/`**: Svelte hooks for theme detection and other cross-cutting UI logic.
 
+### 4. Hybrid Loading Strategy
+To support both Desktop and Web environments:
 - **Desktop (Local)**: Uses standard `vscode-resource:` URIs for efficient native file access.
-- **Web (Remote/Virtual)**: Uses a "Data Injection" fallback.
-    - The extension host reads the file content into memory.
-    - Content is streamed to the webview as a Blob URL.
-    - This bypasses `401 Unauthorized` errors and CORS issues common in browser-based VS Code (vscode.dev).
+- **Web (Remote/Virtual)**: Uses a "Data Injection" fallback where file content is read into memory and transferred as a Blob URL.
 
-### 4. Components
-- **Frontend**: Built with `embed-pdf-viewer`, providing a rich UI for zoom, navigation, and annotations.
-- **Extension Host**: Handles file system interactions and message passing using the VS Code `CustomEditorProvider` API.
+### 5. Memory & Resource Model
+- **Context Retention**: We use `retainContextWhenHidden: true` to prevent UI state loss when switching tabs.
+- **Persistence**: Each PDF view is a separate container. Since there is no automatic LRU (Least Recently Used) management at the extension level, memory scales with the number of open PDF tabs.
+- **Cleanup**: Resources are explicitly released when a tab is closed (Disposable pattern).
