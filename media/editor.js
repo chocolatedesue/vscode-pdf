@@ -64,6 +64,9 @@ window.addEventListener('message', async event => {
         workerUri: message.workerUri
       });
       break;
+    case 'error':
+      showError(message.error);
+      break;
   }
 });
 
@@ -121,3 +124,6 @@ function base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
+
+// Signal to the extension that the webview is ready to receive messages
+vscode.postMessage({ command: 'ready' });

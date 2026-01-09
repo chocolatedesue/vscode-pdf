@@ -98,19 +98,29 @@ export default class PDFEdit {
       workerUri: panel.webview.asWebviewUri(vscode.Uri.joinPath(extUri, "media", "worker-engine-BwJuk6Jt.js")).toString(true)
     };
 
-    const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
-    Logger.log(`Environment: ${isWeb ? "Web" : "Desktop"} (UIKind: ${vscode.env.uiKind})`);
+    panel.webview.onDidReceiveMessage(async (message) => {
+      if (message.command === 'ready') {
+        const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+        Logger.log(`[Webview Ready] Environment: ${isWeb ? "Web" : "Desktop"} (UIKind: ${vscode.env.uiKind})`);
 
-    if (dataProvider.uri && !isWeb) {
-      Logger.log("Strategy: URI Mode (Standard)");
-      msg.pdfUri = panel.webview.asWebviewUri(dataProvider.uri).toString(true);
-      panel.webview.postMessage(msg);
-    } else {
-      Logger.log("Strategy: Data Injection Mode (Web/Fallback)");
-      dataProvider.getFileData().then(function (data) {
-        msg.data = data;
-        panel.webview.postMessage(msg);
-      });
-    }
+        if (dataProvider.uri && !isWeb) {
+          Logger.log("Strategy: URI Mode (Standard)");
+          msg.pdfUri = panel.webview.asWebviewUri(dataProvider.uri).toString(true);
+          panel.webview.postMessage(msg);
+        } else {
+          Logger.log("Strategy: Data Injection Mode (Web/Fallback)");
+          dataProvider.getFileData().then(function (data) {
+            msg.data = data;
+            panel.webview.postMessage(msg);
+          }).catch(function (err) {
+            Logger.log(`Error loading file data: ${err}`);
+            panel.webview.postMessage({
+              command: 'error',
+              error: err.message || String(err)
+            });
+          });
+        }
+      }
+    });
   }
 }
