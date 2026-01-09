@@ -1,7 +1,7 @@
 import PdfViewerApi from "./api";
 import Logger from "./logger";
 import PDFCacheManager from "./cache.js";
-import { VIEW_TYPE, WEBVIEW_OPTIONS, MEDIA_FILES, WORKER_FILE_PATTERN, WORKER_FILE_FALLBACK } from "./constants.js";
+import { VIEW_TYPE, WEBVIEW_OPTIONS, MEDIA_FILES } from "./constants.js";
 const vscode = require("vscode");
 
 // Global cache manager (shared across all PDFDoc instances)
@@ -148,26 +148,20 @@ export default class PDFEdit {
       const htmlContent = new TextDecoder("utf-8").decode(await vscode.workspace.fs.readFile(htmlPath));
 
       // Resolve resources
-      const editorJsUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, MEDIA_FILES.EDITOR_JS));
-      const editorCssUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, MEDIA_FILES.EDITOR_CSS));
+      const webviewBundleUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, MEDIA_FILES.WEBVIEW_BUNDLE));
       const wasmUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, MEDIA_FILES.WASM));
-
-      // Dynamic Worker Resolution
-      const workerFilename = await this.findWorkerFilename(mediaUri);
-      const workerUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, workerFilename));
 
       // Inject variables into HTML
       panel.webview.html = htmlContent
         .replace(/{{CSP_SOURCE}}/g, panel.webview.cspSource)
-        .replace(/{{EDITOR_JS_URI}}/g, editorJsUri.toString())
-        .replace(/{{EDITOR_CSS_URI}}/g, editorCssUri.toString())
+        .replace(/{{WEBVIEW_BUNDLE_URI}}/g, webviewBundleUri.toString())
+        .replace(/{{MEDIA_URI}}/g, panel.webview.asWebviewUri(mediaUri).toString())
         .replace(/{{WASM_URI}}/g, wasmUri.toString());
 
       // Prepare init message
       const msg = {
         command: "preview",
-        wasmUri: wasmUri.toString(true),
-        workerUri: workerUri.toString(true)
+        wasmUri: wasmUri.toString(true)
       };
 
       // Message Handling - Store the disposable for cleanup
@@ -331,29 +325,5 @@ export default class PDFEdit {
     }
   }
 
-  /**
-   * Finds the worker file in the media directory dynamically.
-   * @param {vscode.Uri} mediaUri 
-   * @returns {Promise<string>}
-   */
-  async findWorkerFilename(mediaUri) {
-    try {
-      const children = await vscode.workspace.fs.readDirectory(mediaUri);
-      // Look for worker-engine-*.js or worker-engine.js
-      const workerFile = children.find(([name, type]) =>
-        WORKER_FILE_PATTERN.test(name)
-      );
-
-      if (workerFile) {
-        return workerFile[0];
-      }
-
-      Logger.log(`Worker file not found, defaulting to '${WORKER_FILE_FALLBACK}'`);
-      return WORKER_FILE_FALLBACK;
-    } catch (e) {
-      Logger.log(`Error listing media folder: ${e} - Defaulting to '${WORKER_FILE_FALLBACK}'`);
-      return WORKER_FILE_FALLBACK;
-    }
-  }
 }
 

@@ -4,16 +4,12 @@ const vscode = require("vscode");
 export const VIEW_TYPE = "modernPdfViewer.PDFEdit";
 export const OUTPUT_CHANNEL_NAME = "Modern PDF Preview";
 
-// File name patterns
-export const WORKER_FILE_PATTERN = /^worker-engine.*\.js$/;
-export const WORKER_FILE_FALLBACK = "worker-engine.js";
-
 // Media files
 export const MEDIA_FILES = {
     WASM: "pdfium.wasm",
     EDITOR_JS: "editor.js",
-    EDITOR_CSS: "editor.css",
-    WEBVIEW_HTML: "webview.html"
+    WEBVIEW_HTML: "webview.html",
+    WEBVIEW_BUNDLE: "webview-bundle.js"
 };
 
 // Base64 conversion configuration
