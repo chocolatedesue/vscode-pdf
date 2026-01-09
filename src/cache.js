@@ -13,8 +13,8 @@ class PDFCacheManager {
 
     /**
      * Get cached data for a URI
-     * @param {vscode.Uri} uri 
-     * @returns {string|null} Base64 data or null if not cached
+     * @param {vscode.Uri} uri
+     * @returns {Uint8Array|null} Raw data or null if not cached
      */
     get(uri) {
         const key = uri.toString();
@@ -30,8 +30,8 @@ class PDFCacheManager {
 
     /**
      * Set cached data for a URI
-     * @param {vscode.Uri} uri 
-     * @param {string} data Base64 data
+     * @param {vscode.Uri} uri
+     * @param {Uint8Array} data Raw binary data
      * @param {number} size Original file size in bytes
      */
     set(uri, data, size) {

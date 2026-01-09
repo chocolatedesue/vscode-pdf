@@ -86,8 +86,18 @@
         // Use Blob URL for data injection mode
         let src = message.pdfUri;
         if (!src && message.data) {
-          console.log("[Webview] Converting base64 to blob");
-          const buffer = base64ToArrayBuffer(message.data);
+          console.log("[Webview] Processing injected data");
+          let buffer;
+          if (message.data instanceof Uint8Array) {
+            console.log("[Webview] Data is already Uint8Array (Zero-copy)");
+            buffer = message.data;
+          } else if (message.data instanceof ArrayBuffer) {
+            console.log("[Webview] Data is already ArrayBuffer (Zero-copy)");
+            buffer = new Uint8Array(message.data);
+          } else {
+            console.log("[Webview] Converting base64 to blob (Fallback)");
+            buffer = base64ToArrayBuffer(message.data);
+          }
           const blob = new Blob([buffer], { type: "application/pdf" });
           src = URL.createObjectURL(blob);
         }

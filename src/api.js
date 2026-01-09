@@ -90,6 +90,21 @@ class PdfFileDataProvider {
     });
   }
 
+  /**
+   * Get raw binary data.
+   * @returns {Uint8Array}
+   */
+  getRawData() {
+    if (this.type === DataTypeEnum.UINT8ARRAY) {
+      return this.data;
+    }
+    if (this.type === DataTypeEnum.BASE64STRING) {
+      const binary_string = Buffer.from(this.data, 'base64');
+      return new Uint8Array(binary_string);
+    }
+    throw new TypeError("Unknown data type " + this.type);
+  }
+
 }
 
 

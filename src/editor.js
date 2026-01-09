@@ -42,17 +42,15 @@ class PDFDoc {
     try {
       const startTime = Date.now();
       const fileData = await vscode.workspace.fs.readFile(this.uri);
-      const dataProvider = PdfViewerApi.PdfFileDataProvider.fromUint8Array(fileData);
-      const base64Data = await dataProvider.getFileData();
 
-      // Store in global cache with LRU eviction
-      cacheManager.set(this.uri, base64Data, fileData.byteLength);
+      // Store in global cache as Uint8Array
+      cacheManager.set(this.uri, fileData, fileData.byteLength);
 
       const duration = Date.now() - startTime;
       Logger.logPerformance('PDF data loaded and cached', duration, {
         size: fileData.byteLength
       });
-      return base64Data;
+      return fileData;
     } catch (err) {
       throw err;
     }
@@ -315,9 +313,25 @@ export default class PDFEdit {
     } else {
       Logger.log("Strategy: Data Injection Mode (Web/Fallback)");
       try {
-        const data = await dataProvider.getFileData();
+        let data;
+        if (dataProvider instanceof PDFDoc) {
+          data = await dataProvider.getFileData();
+        } else if (typeof dataProvider.getRawData === 'function') {
+          data = dataProvider.getRawData();
+        } else {
+          data = await dataProvider.getFileData();
+        }
+
         initMsg.data = data;
-        panel.webview.postMessage(initMsg);
+
+        // Use transferables if data is ArrayBuffer or has one
+        if (data instanceof Uint8Array) {
+          panel.webview.postMessage(initMsg, [data.buffer]);
+        } else if (data instanceof ArrayBuffer) {
+          panel.webview.postMessage(initMsg, [data]);
+        } else {
+          panel.webview.postMessage(initMsg);
+        }
       } catch (err) {
         Logger.log(`Error loading file data: ${err}`);
         panel.webview.postMessage({
