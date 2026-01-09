@@ -139,3 +139,5 @@ CLAUDE.md
 .openspec_cache/
 
 *.unzipped.*
+*.vsix
+.vscode-test-web/
