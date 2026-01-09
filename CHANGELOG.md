@@ -5,9 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] - 2026-01-09
 
-No unplanned features as of right now.
+### Major Changes
+- Replaced the legacy `pdf.js` implementation with `embed-pdf-viewer` for a modern, high-performance viewing experience.
+
+### Added
+- **WebAssembly (WASM) Engine**: Highly optimized PDF rendering.
+- **Theme Synchronization**: Automatic switching between light and dark modes based on VS Code settings.
+- **Enhanced UI**: Built-in sidebar for thumbnails/bookmarks, advanced zoom, and search functionality.
+- **Robust Loading**: Adopted Blob URL loading and improved error handling for complex PDF files.
+- **Security**: Implemented strict Content Security Policy (CSP) for the webview.
+
+### Fixed
+- Fixed issues with large PDF files that were failing to render on canvas.
+- Improved reliability for remote (SSH) development environments.
 
 ## [1.1.2] - 2024-2-13
 

@@ -15,17 +15,25 @@
 
 </div>
 
-This extension allows you to view PDF files directly in VS Code.
+This extension provides a high-performance, feature-rich PDF viewing experience directly inside VS Code, powered by the [`embed-pdf-viewer`](https://github.com/EmbedPDF/embed-pdf-viewer) library and WebAssembly.
+
+## Key Features
+
+- **🚀 High Performance**: Faster rendering powered by WebAssembly (WASM).
+- **🎨 Theme Synchronization**: Automatically matches your VS Code theme (Light, Dark, High Contrast).
+- **🛠 Rich Tooling**: Built-in support for search, sidebar thumbnails, zoom, and navigation.
+- **🔒 Secure & Private**: Runs entirely locally via VS Code Webview with strict Content Security Policy (CSP). Offline capable.
+- **📱 Responsive UI**: Modern, clean interface that adapts to your workspace.
 
 ## Usage
 
 ### Installation
 
-Install from the VS Code Extensions panel. Search `adamraichu.pdf-viewer`.
+Install from the VS Code Extensions panel by searching for `adamraichu.pdf-viewer`.
 
 ### Viewing
 
-Just open the file. It should automatically be displayed as a series of images.
+Simply open any `.pdf` file in VS Code. The extension will automatically activate the modern viewer. You can switch back to the default editor or other viewers via the "Open With..." menu.
 
 ## API
 
