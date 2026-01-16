@@ -6,7 +6,7 @@ if [ -f .env ]; then
 fi
 
 # Ensure fresh build before publishing
-npm run build
+bun run build
 
 # VS Code Marketplace
 if [ -z "$VSCE_PAT" ]; then
@@ -17,12 +17,12 @@ fi
 
 echo "Publishing to VS Code Marketplace..."
 # Uses @vscode/vsce from devDependencies
-npx vsce publish -p "$VSCE_PAT" "$@"
+bunx vsce publish -p "$VSCE_PAT" "$@"
 
 # Open VSX Registry
 if [ -n "$OVSX_TOKEN" ]; then
   echo "Publishing to Open VSX Registry..."
-  npx ovsx publish -p "$OVSX_TOKEN" "$@"
+  bunx ovsx publish -p "$OVSX_TOKEN" "$@"
 else
   echo "Warning: OVSX_TOKEN is not set. Skipping Open VSX publish."
 fi

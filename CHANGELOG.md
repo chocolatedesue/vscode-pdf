@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Default Layout**: Updated default spread mode to double-page (odd) for better reading experience.
-- **Packaging Script**: Added local `npm run package` command for easier VSIX generation.
+- **Packaging Script**: Added local `bun run package` command for easier VSIX generation.
 
 ## [1.5.0] - 2026-01-09
 
@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Modern PDF Preview**: Complete re-brand and architecture overhaul.
 - **Engine**: Replaced legacy viewer with `embed-pdf-viewer` (WASM-based) for high performance.
 - **Web Compatibility**: Full support for VS Code Web (vscode.dev) with native Base64 handling.
-- **Automation**: Introduced `npm run update-media` for one-click engine updates.
+- **Automation**: Introduced `bun run update-media` for one-click engine updates.
 
 ### Added
 - **Operations Manual**: Comprehensive guide for building, testing, and updating.

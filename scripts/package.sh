@@ -7,12 +7,12 @@ echo "📦 Starting extension packaging process..."
 
 # Ensure fresh build
 echo "🏗️ Running build..."
-npm run build
+bun run build
 
 # Create VSIX
 echo "📦 Creating VSIX package..."
 # Uses @vscode/vsce from devDependencies
-npx vsce package --no-dependencies
+bunx vsce package --no-dependencies
 
 # Get version from package.json
 VERSION=$(node -p "require('./package.json').version")

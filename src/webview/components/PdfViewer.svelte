@@ -41,6 +41,7 @@
       wasmUrl: pdfState.wasmUrl,
       theme: { preference: pdfState.themePreference },
       tabBar: pdfState.messageConfig?.tabBar,
+      disabledCategories: ["print", "export", "redaction", "document"],
       spread: {
         defaultSpreadMode: pdfState.messageConfig?.spreadMode || SpreadMode.Odd,
       },

@@ -2,11 +2,11 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "build",
+			"type": "shell",
+			"command": "bun run build",
 			"group": "build",
 			"problemMatcher": [],
-			"label": "npm: build",
+			"label": "bun: build",
 			"detail": "webpack"
 		}
 	]

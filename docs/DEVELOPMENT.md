@@ -5,13 +5,13 @@ This document explains how to develop, test, and release the **Modern PDF Previe
 ## 1. Setup
 
 ### Prerequisites
-- **Node.js**: v16 or higher
-- **npm**: for dependency management
+- **Bun**: v1.1 or higher (Recommended)
+- **Node.js**: v16 or higher (Fallback)
 - **VS Code**: for manual testing and development
 
 ### Installation
 ```bash
-npm install
+bun install
 ```
 
 ## 2. Extension Architecture
@@ -28,10 +28,10 @@ The extension uses `webpack` to bundle dependencies and assets.
 
 ```bash
 # Production build
-npm run build
+bun run build
 
 # Watch mode (automatically rebuild on changes)
-npx webpack --watch
+bunx webpack --watch
 ```
 
 ## 4. Testing
@@ -41,7 +41,7 @@ To run the extension in an interactive VS Code instance in your browser:
 
 1.  **Start the web server**:
     ```bash
-    npm run test-web
+    bun run test-web
     ```
 2.  **Open the URL**:
     By default, it will open `http://localhost:3000`.
@@ -50,7 +50,7 @@ To run the extension in an interactive VS Code instance in your browser:
 To run tests in a headless browser (useful for CI/CD):
 
 ```bash
-npm run test-web-headless
+bun run test-web-headless
 ```
 
 ### Manual Desktop Testing
@@ -67,11 +67,11 @@ The update process is automated:
 
 1.  **Install Latest Package**:
     ```bash
-    npm install @embedpdf/snippet@latest
+    bun add @embedpdf/snippet@latest
     ```
 2.  **Run Update Script**:
     ```bash
-    npm run update-media
+    bun run update-media
     ```
 
 ## 6. Release & Publishing
@@ -88,5 +88,5 @@ The project includes a helper script `scripts/publish.sh` that publishes to both
 
 **Command**:
 ```bash
-npm run deploy
+bun run deploy
 ```
