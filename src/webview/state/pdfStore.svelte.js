@@ -69,11 +69,10 @@ export const pdfState = $state({
       this.loading = false;
     }
 
+    // Note: We do NOT persist pdfUri in state because asWebviewUri() tokens
+    // are session-specific and become invalid after VSCode restarts.
+    // The extension will always send a fresh URI when the webview is restored.
     vscodeService.setState({
-      pdfUri: message.pdfUri,
-      data: message.data,
-      wasmUri: message.wasmUri,
-      workerUri: message.workerUri,
       viewState: vscodeService.getState()?.viewState || null,
       config: message.config,
     });

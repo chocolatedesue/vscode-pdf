@@ -69,6 +69,7 @@ export default class PDFEdit {
 
   static viewType = VIEW_TYPE;
   static globalContext = null;
+  static htmlTemplateCache = null; // Cache for HTML template
 
   /**
    * Preview a PDF file from an API provider.
@@ -141,9 +142,7 @@ export default class PDFEdit {
             return;
           }
 
-          Logger.log(`[Save] Writing ${data.byteLength} bytes to ${uri.fsPath}`);
-          await vscode.workspace.fs.writeFile(uri, data);
-
+          await this.#writeFileData(uri, data);
           Logger.log(`[Save] File saved successfully`);
           resolve();
         } catch (e) {
@@ -172,6 +171,17 @@ export default class PDFEdit {
         reject(new Error("Save cancelled"));
       });
     });
+  }
+
+  /**
+   * Write file data to disk (unified method for all save operations)
+   * @param {vscode.Uri} uri
+   * @param {Uint8Array|ArrayLike<number>} data
+   */
+  async #writeFileData(uri, data) {
+    const buffer = data instanceof Uint8Array ? data : new Uint8Array(data);
+    Logger.log(`[Save] Writing ${buffer.byteLength} bytes to ${uri.fsPath}`);
+    await vscode.workspace.fs.writeFile(uri, buffer);
   }
 
   /**
@@ -283,9 +293,15 @@ export default class PDFEdit {
     Logger.log(`[Performance] Webview setup started for ${uriString}`);
 
     try {
-      // Load HTML template
-      const htmlPath = vscode.Uri.joinPath(mediaUri, MEDIA_FILES.WEBVIEW_HTML);
-      const htmlContent = new TextDecoder("utf-8").decode(await vscode.workspace.fs.readFile(htmlPath));
+      // Load HTML template (cached)
+      if (!PDFEdit.htmlTemplateCache) {
+        const htmlPath = vscode.Uri.joinPath(mediaUri, MEDIA_FILES.WEBVIEW_HTML);
+        PDFEdit.htmlTemplateCache = new TextDecoder("utf-8").decode(
+          await vscode.workspace.fs.readFile(htmlPath)
+        );
+        Logger.log('[Cache] HTML template loaded and cached');
+      }
+      const htmlContent = PDFEdit.htmlTemplateCache;
 
       // Resolve resources
       const webviewBundleUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, MEDIA_FILES.WEBVIEW_BUNDLE));
@@ -328,13 +344,10 @@ export default class PDFEdit {
           // Unsolicited save from webview (e.g. Ctrl+S)
           const rawData = message.data;
           if (rawData && uri && uri.scheme !== 'pdf-api') {
-            Logger.log(`[Direct Save] Writing ${rawData.length} bytes to ${uri.fsPath}`);
-            // Write file directly
+            Logger.log(`[Direct Save] Received ${rawData.length} bytes`);
             try {
-              const buffer = new Uint8Array(rawData);
-              await vscode.workspace.fs.writeFile(uri, buffer);
-
-              Logger.log('[Direct Save] File overwritten successfully');
+              await this.#writeFileData(uri, rawData);
+              Logger.log('[Direct Save] File saved successfully');
             } catch (e) {
               Logger.log(`[Direct Save] Failed to write file: ${e}`);
               panel.webview.postMessage({

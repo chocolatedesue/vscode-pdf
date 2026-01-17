@@ -54,10 +54,11 @@
     window.addEventListener("message", handleMessage);
     vscodeService.postMessage({ command: "ready" });
 
-    const oldState = vscodeService.getState();
-    if (oldState && (oldState.pdfUri || oldState.data)) {
-      handleMessage({ data: { command: "preview", ...oldState } } as MessageEvent);
-    }
+    // Note: We intentionally do NOT restore pdfUri from old state here
+    // because asWebviewUri() generates URIs with session-specific tokens
+    // that become invalid after VSCode restarts. The extension will send
+    // a fresh URI in response to the 'ready' message above.
+    // However, we DO want to restore the viewing position after PDF loads.
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);

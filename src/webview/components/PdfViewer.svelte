@@ -5,6 +5,7 @@
     SpreadMode,
     type EmbedPdfContainer,
     type PluginRegistry,
+    type ScrollCapability,
   } from "@embedpdf/svelte-pdf-viewer";
   import { pdfState } from "../state/pdfStore.svelte.js";
   import { vscodeService } from "../services/vscode.js";
@@ -22,6 +23,44 @@
       console.log("[Webview] Sending dirty signal");
       vscodeService.postMessage({ command: "dirty" });
     };
+
+    // Restore viewing position if available
+    const oldState = vscodeService.getState();
+    if (oldState?.viewState?.pageNumber) {
+      console.log("[Webview] Restoring view to page", oldState.viewState.pageNumber);
+      const scrollPlugin = r.getPlugin<any>("scroll");
+      if (scrollPlugin) {
+        const scrollCapability: ScrollCapability = scrollPlugin.provides();
+        setTimeout(() => {
+          scrollCapability.scrollToPage({
+            pageNumber: oldState.viewState.pageNumber,
+            behavior: "instant"
+          });
+        }, 100);
+      }
+    }
+
+    // Set up state saving on page changes (with debounce to avoid excessive saves)
+    const scrollPlugin = r.getPlugin<any>("scroll");
+    if (scrollPlugin) {
+      const scrollCapability: ScrollCapability = scrollPlugin.provides();
+      let saveTimeout: number | undefined;
+
+      scrollCapability.onPageChange((event) => {
+        // Debounce state saves to avoid performance issues during rapid page changes
+        clearTimeout(saveTimeout);
+        saveTimeout = window.setTimeout(() => {
+          const currentState = vscodeService.getState() || {};
+          vscodeService.setState({
+            ...currentState,
+            viewState: {
+              pageNumber: event.pageNumber,
+              totalPages: event.totalPages
+            }
+          });
+        }, 300); // 300ms debounce
+      });
+    }
   };
 
   $effect(() => {

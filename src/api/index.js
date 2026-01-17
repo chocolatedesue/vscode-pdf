@@ -1,5 +1,6 @@
 import PDFEdit from "../providers/editorProvider";
 import Logger from "../services/logger";
+import { WEBVIEW_OPTIONS } from "../constants/index.js";
 const vscode = require("vscode");
 
 class DataTypeEnum {
@@ -82,10 +83,7 @@ export default class PdfViewerApi {
       "modernPdfViewer.apiCreatedPreview",
       provider.name,
       vscode.ViewColumn.Active,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true
-      }
+      WEBVIEW_OPTIONS
     );
     PDFEdit.previewPdfFile(provider, panel);
   }
